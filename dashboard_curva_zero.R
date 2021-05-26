@@ -1,13 +1,15 @@
 #Script para dados da curva zero
 #Feito por: Felipe Simplício Ferreira
-#última atualização:25/05/2021
+#última atualização: 25/05/2021
 
 ##Carregando pacotes que serão utilizados
 library(tidyverse)
-library(rio)
+library
 library(openxlsx)
-library(lubridate)
 #library(shiny)
+#devtools::install_github('bbc/bbplot')
+#library(bbplot)
+
 
 
 #Importando planilha
@@ -24,16 +26,12 @@ datas_tratadas <- as.vector(as.character((convertToDate(datas_tratadas))))
 #Coletando o resto dos dados
 dados <- import("curva_zero.xlsx", skip = 5, col_names = F)
 seleciona_dados <- seq(1,length(dados), 8)
-#seleciona_coluna_nominal <- seq(4,length(dados), 8)
-#seleciona_coluna_inflacao <- seq(5,length(dados), 8)
 for (i in 1:length(datas_tratadas)){
   dados_dia <- dados[0:22,seleciona_dados[i]:(seleciona_dados[i]+4)]
   names(dados_dia) <- dados_dia[1,]
-  dados_dia <- dados_dia[-1,]
-  dados_dia <- mutate_all(dados_dia, function(x) as.numeric(as.character(x)))
-  dados_dia <- as.data.frame(dados_dia)
-  dados_dia <- drop_na(dados_dia)
-  names(dados_dia) <- c("Anos", "Vertices", "real", "nominal", "implícita")
+  dados_dia <- dados_dia[-1,] %>% mutate_all(function(x) as.numeric(as.character(x))) %>%
+    as.data.frame() %>% drop_na()
+  names(dados_dia) <- c("anos", "vertices", "real", "nominal", "implícita")
   nome_arquivo <- as.character(datas_tratadas[i])
   assign(nome_arquivo, dados_dia) #Nomeando arquivos
   print(paste(i, length(datas_tratadas), sep = '/')) #Printa o progresso da repetição
@@ -42,35 +40,39 @@ for (i in 1:length(datas_tratadas)){
 
 #Selecionando data
 usuario_data <- function(){
-  resposta_data <- readline(prompt = "Escolha uma data no formato YYYY-MM-DD: ")
-
-    while(is.element(resposta_data, datas_tratadas) == F){
-      print(datas_tratadas)
-      resposta_data <- readline(prompt = "Escolha uma data no formato YYYY-MM-DD: ")
-    }
-
-  resposta_dado <- readline(prompt = "Escolha um dado (nominal, real ou implícita): ")
-  opcoes_dado <- c("nominal", "real", "implícita")
-  while(is.element(resposta_dado, opcoes_dado) == F){
-    resposta_dado <- readline(prompt = "Escolha um dado (nominal, real ou implícita): ")
+  resposta_dados <- readline(prompt = "Escolha um dado (nominal, real ou implícita): ")
+  opcoes_dados <- c("nominal", "real", "implícita")
+  while(is.element(resposta_dados, opcoes_dados) == F){
+    resposta_dados <- readline(prompt = "Escolha um dado (nominal, real ou implícita): ")
   }
+  
+  resposta_data <- readline(prompt = "Escolha uma data no formato YYYY-MM-DD: ")
+  while(is.element(resposta_data, datas_tratadas) == F){
+    print(datas_tratadas)
+    resposta_data <- readline(prompt = "Escolha uma data no formato YYYY-MM-DD: ")
+  }
+  
+  dado_graf <- get(resposta_data) %>% select(anos, resposta_dados) %>% rename(!!resposta_data := resposta_dados)
 
   graf <- ggplot() + 
-    geom_line(data = get(resposta_data), aes(x=Anos, y = get(resposta_dado), colour = resposta_data), size=.8)
+    geom_line(data = dado_graf, aes(x = anos, y = get(!!resposta_data)))
   show(graf)
   
-  adicionar_linha <- readline(prompt = "Deseja adicionar mais datas (responda com sim ou não): ")
-  while(adicionar_linha == "sim"){
+  for (i in 1:length(datas_tratadas)){
     resposta_data_nova <- readline(prompt = "Escolha uma data no formato YYYY-MM-DD: ")
     while(is.element(resposta_data_nova, datas_tratadas) == F){
       print(datas_tratadas)
       resposta_data_nova <- readline(prompt = "Escolha uma data no formato YYYY-MM-DD: ")
     }
     
-    graf <- graf + 
-      geom_line(data = get(resposta_data_nova), aes(x=Anos, y = get(resposta_dado), colour = resposta_data_nova), size=.8)
-    show(graf)
+    dado_graf <- merge(dado_graf, select(get(resposta_data_nova), anos, resposta_dados), by = "anos", all = T) %>%
+      rename(!!resposta_data_nova := resposta_dados)
     
+    dado_graf_mult <- pivot_longer(dado_graf, -1)
+    
+    graf <- graf + 
+      geom_line(data = dado_graf_mult, aes(x = anos, y = value, colour = name))
+    show(graf)
   }
 }
 
