@@ -4,7 +4,7 @@
 
 ##Carregando pacotes que serão utilizados
 library(tidyverse)
-library
+library(rio)
 library(openxlsx)
 #library(shiny)
 #devtools::install_github('bbc/bbplot')
