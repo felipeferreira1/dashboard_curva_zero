@@ -55,7 +55,7 @@ usuario_data <- function(){
     resposta_data <- readline(prompt = "Escolha uma data no formato YYYY-MM-DD: ")
   }
   
-  dado_graf <- get(resposta_data) %>% select(anos, resposta_dados) %>% rename(!!resposta_data := resposta_dados)
+  dado_graf <- get(resposta_data) %>% select(anos, all_of(resposta_dados)) %>% rename(!!resposta_data := resposta_dados)
 
   graf <- ggplot(dado_graf, aes(x = anos, y = get(!!resposta_data), label = sprintf("%0.2f", round(dado_graf[,2],2)))) + 
     geom_line() + geom_label_repel() + 
