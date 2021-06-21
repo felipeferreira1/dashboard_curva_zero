@@ -62,8 +62,6 @@ for (i in 1:length(datas_tratadas)){
     print(paste(i, length(datas_tratadas), sep = '/')) #Printa o progresso
 }
 
-# dados_juntos = merge(dados_implicita, dados_nominal, by = c("anos", "data"), all = T)
-# dados_juntos = merge(dados_juntos, dados_real, by = c("anos", "data"), all = T)
 
 dados_lista <- list(implicita = dados_implicita, nominal = dados_nominal, real = dados_real)
 
@@ -78,27 +76,24 @@ server <- function(input, output, session){
     }) 
     
     dados_graf <- reactive({
-        as.data.frame(dados_lista[[resposta_dados()]]) %>% 
-            dplyr::filter(data == resposta_data())
+        as.data.frame(dados_lista[[resposta_dados()]])[as.data.frame(dados_lista[[resposta_dados()]])$data %in% resposta_data(),]
     })
-    
-    # output$table <- renderDataTable({
-    #     dados_graf()}
-    # )
-    
-    # output$text <-renderText({
-    #     class(resposta_data())
-    # })
     
     output$plot <- renderPlot({
         dados_graf() %>% 
-            ggplot(aes(x = anos, y = !!sym(resposta_dados()), color = data, label = !!sym(resposta_dados()))) + 
+            ggplot(aes(x = anos, y = !!sym(resposta_dados()), color = data, label = sprintf("%0.2f", round(!!sym(resposta_dados()),2)))) + 
             geom_line() + geom_label_repel() + 
             theme(axis.text.x=element_text(angle=90, hjust=1)) + 
             labs(title = paste("Curva zero", resposta_data(), sep = " "), subtitle = resposta_dados(), 
                  caption = "Fonte: Ambima") + ylab("%") + xlab("Anos")
             }
     )
+    
+    output$table <- renderTable({
+        arrange(pivot_wider(dados_graf(), names_from = data, values_from = !!sym(resposta_dados())), anos)
+    }
+    )
+    
 }
 
 # Define UI for application
@@ -115,9 +110,8 @@ ui <- fluidPage(
                             "real" = "real",
                             "implicita" = "implicita")),
     
-    plotOutput("plot")
-    # dataTableOutput("table")
-    # textOutput("text")
+    plotOutput("plot"),
+    tableOutput("table")
 )
 
 
