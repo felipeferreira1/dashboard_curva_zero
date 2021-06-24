@@ -1,12 +1,12 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+#################################################################################################################
+# Shiny app com dados da curva zero
+# Felipe Simplicio Ferreira
+# Data: 24-06-2021
+#################################################################################################################
 
+
+
+# Pacotes
 library(shiny)
 library(tidyverse)
 library(rio)
@@ -14,8 +14,10 @@ library(openxlsx)
 library(ggrepel)
 library(scales)
 
-#Importando planilha
-#Definindo as datas
+
+
+# Importando planilha
+# Definindo as datas
 datas <- import("curva_zero.xlsx", col_names = F)
 datas <- datas[1,]
 seleciona_datas <- seq(2,length(datas), 8)
@@ -25,9 +27,8 @@ for (i in 1:length(seleciona_datas)){
 }
 datas_tratadas <- as.vector(as.character((convertToDate(datas_tratadas))))
 
-#Coletando o resto dos dados
+# Coletando o resto dos dados
 dados <- import("curva_zero.xlsx", skip = 5, col_names = F)
-# dados_graf <- data.frame()
 seleciona_dados <- seq(1,length(dados), 8)
 for (i in 1:length(datas_tratadas)){
     dados_dia <- dados[0:22,seleciona_dados[i]:(seleciona_dados[i]+4)]
@@ -65,6 +66,9 @@ for (i in 1:length(datas_tratadas)){
 
 dados_lista <- list(implicita = dados_implicita, nominal = dados_nominal, real = dados_real)
 
+
+
+# Código do servidor
 server <- function(input, output, session){
 
     resposta_data <- reactive({
@@ -79,43 +83,59 @@ server <- function(input, output, session){
         as.data.frame(dados_lista[[resposta_dados()]])[as.data.frame(dados_lista[[resposta_dados()]])$data %in% resposta_data(),]
     })
     
+    tabela <- reactive({
+        arrange(pivot_wider(dados_graf(), names_from = data, values_from = !!sym(resposta_dados())), anos)
+    })
+    
+    
     output$plot <- renderPlot({
         dados_graf() %>% 
             ggplot(aes(x = anos, y = !!sym(resposta_dados()), color = data, label = sprintf("%0.2f", round(!!sym(resposta_dados()),2)))) + 
             geom_line() + geom_label_repel() + 
             theme(axis.text.x=element_text(angle=90, hjust=1)) + 
-            labs(title = paste("Curva zero", resposta_data(), sep = " "), subtitle = resposta_dados(), 
-                 caption = "Fonte: Ambima") + ylab("%") + xlab("Anos")
+            labs(title = "Curva zero", subtitle = resposta_dados(), 
+                 caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
+            scale_x_continuous(breaks = seq(0.5, 10.5, 0.5))
             }
     )
     
     output$table <- renderTable({
-        arrange(pivot_wider(dados_graf(), names_from = data, values_from = !!sym(resposta_dados())), anos)
+        # arrange(pivot_wider(dados_graf(), names_from = data, values_from = !!sym(resposta_dados())), anos)
+        tabela()
     }
+    )
+    
+    output$download <- downloadHandler(
+        filename = function(){"dados.csv"}, 
+        content = function(fname){
+            write.csv2(tabela(), fname, row.names = F)
+        }
     )
     
 }
 
-# Define UI for application
+
+
+# Código da "user interface"
 ui <- fluidPage(
     h1("Curva Zero"),
     selectInput(inputId = "datas",
                 label = "escolha uma data",
                 choices = datas_tratadas,
                 multiple = T),
-    
     selectInput(inputId = "dados",
                 label = "escolha um tipo de dado",
                 choices = c("nominal" = "nominal",
                             "real" = "real",
                             "implicita" = "implicita")),
-    
+    h2("Grafico"),
     plotOutput("plot"),
-    tableOutput("table")
+    h2("Tabela com dados"),
+    tableOutput("table"),
+    downloadButton('download',"Download da tabela"),
 )
+
 
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
