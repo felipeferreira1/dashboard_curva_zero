@@ -70,7 +70,7 @@ dados_lista <- list(implicita = dados_implicita, nominal = dados_nominal, real =
 
 
 
-# Código do servidor
+# CÃ³digo do servidor
 server <- function(input, output, session){
 
     resposta_data <- reactive({
@@ -95,7 +95,7 @@ server <- function(input, output, session){
         if (resposta_dados() == "nominal")
             return("Nominal")
         if (resposta_dados() == "implicita")
-            return("Inflação implícita")
+            return("InflaÃ§Ã£o implÃ­cita")
         })
     
     limites <- reactive({
@@ -129,7 +129,8 @@ server <- function(input, output, session){
 
 
 
-# Código da "user interface"
+# CÃ³digo da "user interface"
+
 ui <- fluidPage(
     h1("Estrutura a termo da taxa de juros"),
     selectInput(inputId = "datas",
@@ -141,13 +142,30 @@ ui <- fluidPage(
                 label = "Escolha um tipo de dado:",
                 choices = c("Nominal" = "nominal",
                             "Real" = "real",
-                            "Inflação implícita" = "implicita")),
-    h2("Gráfico"),
-    plotOutput("plot"),
-    h2("Tabela com dados"),
-    tableOutput("table"),
-    downloadButton('download',"Download da tabela")
-)
+                            "InflaÃ§Ã£o implÃ­cita" = "implicita")),
+    mainPanel(tabsetPanel(type = "tabs",
+              tabPanel("Gráfico", plotOutput("plot")),
+              tabPanel("Tabela", tableOutput("table"))),
+    downloadButton('download',"Download dos dados")))
+
+# ui <- fluidPage(
+#     h1("Estrutura a termo da taxa de juros"),
+#     selectInput(inputId = "datas",
+#                 label = "Escolha alguma(s) data(s):",
+#                 choices = datas_tratadas,
+#                 multiple = T,
+#                 selected = head(datas_tratadas,1)),
+#     selectInput(inputId = "dados",
+#                 label = "Escolha um tipo de dado:",
+#                 choices = c("Nominal" = "nominal",
+#                             "Real" = "real",
+#                             "InflaÃ§Ã£o implÃ­cita" = "implicita")),
+#     h2("GrÃ¡fico"),
+#     plotOutput("plot"),
+#     h2("Tabela com dados"),
+#     tableOutput("table"),
+#     downloadButton('download',"Download da tabela")
+# )
 
 
 
