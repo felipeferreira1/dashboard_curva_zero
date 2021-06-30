@@ -132,21 +132,24 @@ server <- function(input, output, session){
 # CÃ³digo da "user interface"
 
 ui <- fluidPage(
-    h1("Estrutura a termo da taxa de juros"),
-    selectInput(inputId = "datas",
-                label = "Escolha alguma(s) data(s):",
-                choices = datas_tratadas,
-                multiple = T,
-                selected = head(datas_tratadas,1)),
-    selectInput(inputId = "dados",
-                label = "Escolha um tipo de dado:",
-                choices = c("Nominal" = "nominal",
-                            "Real" = "real",
-                            "InflaÃ§Ã£o implÃ­cita" = "implicita")),
-    mainPanel(tabsetPanel(type = "tabs",
+    titlePanel("Estrutura a termo da taxa de juros"),
+    sidebarLayout(
+        sidebarPanel(
+            selectInput(inputId = "datas", 
+                        label = "Escolha alguma(s) data(s):",
+                        choices = datas_tratadas,
+                        multiple = T,
+                        selected = head(datas_tratadas,1)),
+            br(),
+            selectInput(inputId = "dados",
+                        label = "Escolha um tipo de dado:",
+                        choices = c("Nominal" = "nominal",
+                                    "Real" = "real",
+                                    "InflaÃ§Ã£o implÃ­cita" = "implicita")),
+            downloadButton('download',"Download dos dados")),
+mainPanel(tabsetPanel(type = "tabs",
               tabPanel("Gráfico", plotOutput("plot")),
-              tabPanel("Tabela", tableOutput("table"))),
-    downloadButton('download',"Download dos dados")))
+              tabPanel("Tabela", tableOutput("table"))))))
 
 # ui <- fluidPage(
 #     h1("Estrutura a termo da taxa de juros"),
