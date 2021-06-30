@@ -13,6 +13,7 @@ library(rio)
 library(openxlsx)
 library(ggrepel)
 library(scales)
+library(shinydashboard)
 
 
 
@@ -73,57 +74,115 @@ dados_lista <- list(implicita = dados_implicita, nominal = dados_nominal, real =
 # CÃ³digo do servidor
 server <- function(input, output, session){
 
-    resposta_data <- reactive({
-        as.character(input$datas)
+    resposta_data1 <- reactive({
+        as.character(input$datas1)
     })
     
-    resposta_dados <- reactive({
-        as.character(input$dados)
+    resposta_dados1 <- reactive({
+        as.character(input$dados1)
     }) 
     
-    dados_graf <- reactive({
-        req(as.data.frame(dados_lista[[resposta_dados()]])[as.data.frame(dados_lista[[resposta_dados()]])$data %in% resposta_data(),])
+    dados_graf1 <- reactive({
+        req(as.data.frame(dados_lista[[resposta_dados1()]])[as.data.frame(dados_lista[[resposta_dados1()]])$data %in% resposta_data1(),])
     })
     
-    tabela <- reactive({
-        arrange(pivot_wider(dados_graf(), names_from = data, values_from = !!sym(resposta_dados())), anos)
+    tabela1 <- reactive({
+        arrange(pivot_wider(dados_graf1(), names_from = data, values_from = !!sym(resposta_dados1())), anos)
     })
     
-    opcao_dados <- reactive({
-        if (resposta_dados() == "real")
+    opcao_dados1 <- reactive({
+        if (resposta_dados1() == "real")
             return("Real")
-        if (resposta_dados() == "nominal")
+        if (resposta_dados1() == "nominal")
             return("Nominal")
-        if (resposta_dados() == "implicita")
-            return("InflaÃ§Ã£o implÃ­cita")
+        if (resposta_dados1() == "implicita")
+            return("Inflação implícita")
         })
     
-    limites <- reactive({
-        dados_graf() %>% select(-anos, -data) %>% replace(is.na(.), 0)
+    limites1 <- reactive({
+        dados_graf1() %>% select(-anos, -data) %>% replace(is.na(.), 0)
     })
     
     
-    output$plot <- renderPlot({
-        dados_graf() %>% 
-            ggplot(aes(x = anos, y = !!sym(resposta_dados()), color = data, label = sprintf("%0.2f", round(!!sym(resposta_dados()),2)))) + 
+    output$plot1 <- renderPlot({
+        dados_graf1() %>% 
+            ggplot(aes(x = anos, y = !!sym(resposta_dados1()), color = data, label = sprintf("%0.2f", round(!!sym(resposta_dados1()),2)))) + 
             geom_line() + geom_label_repel() + 
             theme(axis.text.x=element_text(angle=90, hjust=1)) + 
-            labs(title = "Curvas", subtitle = opcao_dados(), 
+            labs(title = "Curvas", subtitle = opcao_dados1(), 
                  caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
             scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
-            scale_y_continuous(breaks = round(seq(min(limites()), max(limites()), by = 0.5),1)) + 
+            scale_y_continuous(breaks = round(seq(min(limites1()), max(limites1()), by = 0.5),1)) + 
             scale_color_discrete(name = "Datas")
             })
     
-    output$table <- renderTable({
-        # arrange(pivot_wider(dados_graf(), names_from = data, values_from = !!sym(resposta_dados())), anos)
-        tabela()
+    output$table1 <- renderTable({
+        # arrange(pivot_wider(dados_graf1(), names_from = data, values_from = !!sym(resposta_dados())), anos)
+        tabela1()
         })
     
-    output$download <- downloadHandler(
+    output$download1 <- downloadHandler(
         filename = function(){"dados.xlsx"}, 
         content = function(fname){
-            export(tabela(), fname, row.names = F)
+            export(tabela1(), fname, row.names = F)
+        })
+    
+    
+    
+    resposta_data2 <- reactive({
+        as.character(input$datas2)
+    })
+    
+    resposta_data3 <- reactive({
+        as.character(input$datas3)
+    })
+    
+    resposta_dados2 <- reactive({
+        as.character(input$dados2)
+    }) 
+    
+    dados_graf2 <- reactive({
+        req(as.data.frame(dados_lista[[resposta_dados2()]])[as.data.frame(dados_lista[[resposta_dados2()]])$data %in% c(resposta_data2(), resposta_data3()),])
+    })
+    
+    tabela2 <- reactive({
+        arrange(pivot_wider(dados_graf2(), names_from = data, values_from = !!sym(resposta_dados2())), anos) %>% transmute(anos = anos, diferenca = !!sym(resposta_data2()) - !!sym(resposta_data3()))
+    })
+    
+    opcao_dados2 <- reactive({
+        if (resposta_dados2() == "real")
+            return("Real")
+        if (resposta_dados2() == "nominal")
+            return("Nominal")
+        if (resposta_dados2() == "implicita")
+            return("Inflação implícita")
+    })
+    
+    limites2 <- reactive({
+        tabela2() %>% replace(is.na(.), 0)
+    })
+    
+    output$plot2 <- renderPlot({
+        tabela2() %>% 
+            ggplot(aes(x = anos, y = diferenca, label = sprintf("%0.2f", diferenca, 2))) + 
+            geom_line() + geom_label_repel() + 
+            theme(axis.text.x=element_text(angle=90, hjust=1)) + 
+            labs(title = "Diferença", subtitle = opcao_dados2(), 
+                 caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
+            scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
+            scale_y_continuous(breaks = round(seq(min(limites2()), max(limites2()), by = 0.5),1)) + 
+            scale_color_discrete(name = "Datas")
+    })
+    
+    output$table2 <- renderTable({
+        # arrange(pivot_wider(dados_graf1(), names_from = data, values_from = !!sym(resposta_dados())), anos)
+        tabela2()
+    })
+    
+    output$download2 <- downloadHandler(
+        filename = function(){"dados.xlsx"}, 
+        content = function(fname){
+            export(tabela2(), fname, row.names = F)
         })
 }
 
@@ -131,25 +190,85 @@ server <- function(input, output, session){
 
 # CÃ³digo da "user interface"
 
-ui <- fluidPage(
-    titlePanel("Estrutura a termo da taxa de juros"),
-    sidebarLayout(
-        sidebarPanel(
-            selectInput(inputId = "datas", 
-                        label = "Escolha alguma(s) data(s):",
-                        choices = datas_tratadas,
-                        multiple = T,
-                        selected = head(datas_tratadas,1)),
-            br(),
-            selectInput(inputId = "dados",
-                        label = "Escolha um tipo de dado:",
-                        choices = c("Nominal" = "nominal",
-                                    "Real" = "real",
-                                    "InflaÃ§Ã£o implÃ­cita" = "implicita")),
-            downloadButton('download',"Download dos dados")),
-mainPanel(tabsetPanel(type = "tabs",
-              tabPanel("Gráfico", plotOutput("plot")),
-              tabPanel("Tabela", tableOutput("table"))))))
+ui <- dashboardPage(
+    dashboardHeader(),
+    dashboardSidebar(
+        sidebarMenu(
+            menuItem("Curvas", tabName = "first_app"),
+            menuItem("Diferenças", tabName = "second_app")
+        )
+    ),
+    dashboardBody(
+        tabItems(
+            tabItem(tabName = "first_app",
+                    fluidPage(
+                        titlePanel("Estrutura a termo da taxa de juros"),
+                        sidebarLayout(
+                            sidebarPanel(
+                                selectInput(inputId = "datas1",
+                                            label = "Escolha alguma(s) data(s):",
+                                            choices = datas_tratadas,
+                                            multiple = T,
+                                            selected = head(datas_tratadas,1)),
+                                br(),
+                                selectInput(inputId = "dados1",
+                                            label = "Escolha um tipo de dado:",
+                                            choices = c("Nominal" = "nominal",
+                                                        "Real" = "real",
+                                                        "InflaÃ§Ã£o implícita" = "implicita")),
+                                downloadButton('download1',"Download dos dados")),
+                            mainPanel(tabsetPanel(type = "tabs",
+                                                  tabPanel("Gráfico", plotOutput("plot1")),
+                                                  tabPanel("Tabela", tableOutput("table1"))))))
+            ),
+            tabItem(tabName = "second_app",
+                    fluidPage(
+                        titlePanel("Diferença entre vértices de datas diferentes"),
+                        sidebarLayout(
+                            sidebarPanel(
+                                selectInput(inputId = "datas2",
+                                            label = "Escolha uma data:",
+                                            choices = datas_tratadas,
+                                            multiple = F,
+                                            selected = head(datas_tratadas,1)),
+                                br(),
+                                selectInput(inputId = "datas3",
+                                            label = "Escolha outra data:",
+                                            choices = datas_tratadas,
+                                            selected = tail(datas_tratadas,1)),
+                                br(),
+                                selectInput(inputId = "dados2",
+                                            label = "Escolha um tipo de dado:",
+                                            choices = c("Nominal" = "nominal",
+                                                        "Real" = "real",
+                                                        "InflaÃ§Ão implícita" = "implicita")),
+                                downloadButton('download2',"Download dos dados")),
+                            mainPanel(tabsetPanel(type = "tabs",
+                                                  tabPanel("Gráfico", plotOutput("plot2")),
+                                                  tabPanel("Tabela", tableOutput("table2")))))))
+        )
+    )
+)
+    
+#     fluidPage(
+#     titlePanel("Estrutura a termo da taxa de juros"),
+#     sidebarLayout(
+#         sidebarPanel(
+#             selectInput(inputId = "datas",
+#                         label = "Escolha alguma(s) data(s):",
+#                         choices = datas_tratadas,
+#                         multiple = T,
+#                         selected = head(datas_tratadas,1)),
+#             br(),
+#             selectInput(inputId = "dados",
+#                         label = "Escolha um tipo de dado:",
+#                         choices = c("Nominal" = "nominal",
+#                                     "Real" = "real",
+#                                     "InflaÃ§Ã£o implÃ­cita" = "implicita")),
+#             downloadButton('download',"Download dos dados")),
+# mainPanel(tabsetPanel(type = "tabs",
+#               tabPanel("Gráfico", plotOutput("plot")),
+#               tabPanel("tabela1", tableOutput("table"))))))
 
 # ui <- fluidPage(
 #     h1("Estrutura a termo da taxa de juros"),
@@ -165,9 +284,9 @@ mainPanel(tabsetPanel(type = "tabs",
 #                             "InflaÃ§Ã£o implÃ­cita" = "implicita")),
 #     h2("GrÃ¡fico"),
 #     plotOutput("plot"),
-#     h2("Tabela com dados"),
+#     h2("tabela1 com dados"),
 #     tableOutput("table"),
-#     downloadButton('download',"Download da tabela")
+#     downloadButton('download',"Download da tabela1")
 # )
 
 
