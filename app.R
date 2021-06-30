@@ -1,5 +1,5 @@
 #################################################################################################################
-# Shiny app com dados da curva zero
+# Shiny app com dados da estrutura a termo da taxa de juros
 # Felipe Simplicio Ferreira
 # Data: 24-06-2021
 #################################################################################################################
@@ -26,6 +26,8 @@ for (i in 1:length(seleciona_datas)){
     datas_tratadas[i] <- datas[1,seleciona_datas[i]]
 }
 datas_tratadas <- as.vector(as.character((convertToDate(datas_tratadas))))
+
+
 
 # Coletando o resto dos dados
 dados <- import("curva_zero.xlsx", skip = 5, col_names = F)
@@ -80,11 +82,24 @@ server <- function(input, output, session){
     }) 
     
     dados_graf <- reactive({
-        as.data.frame(dados_lista[[resposta_dados()]])[as.data.frame(dados_lista[[resposta_dados()]])$data %in% resposta_data(),]
+        req(as.data.frame(dados_lista[[resposta_dados()]])[as.data.frame(dados_lista[[resposta_dados()]])$data %in% resposta_data(),])
     })
     
     tabela <- reactive({
         arrange(pivot_wider(dados_graf(), names_from = data, values_from = !!sym(resposta_dados())), anos)
+    })
+    
+    opcao_dados <- reactive({
+        if (resposta_dados() == "real")
+            return("Real")
+        if (resposta_dados() == "nominal")
+            return("Nominal")
+        if (resposta_dados() == "implicita")
+            return("Inflação implícita")
+        })
+    
+    limites <- reactive({
+        dados_graf() %>% select(-anos, -data) %>% replace(is.na(.), 0)
     })
     
     
@@ -93,46 +108,45 @@ server <- function(input, output, session){
             ggplot(aes(x = anos, y = !!sym(resposta_dados()), color = data, label = sprintf("%0.2f", round(!!sym(resposta_dados()),2)))) + 
             geom_line() + geom_label_repel() + 
             theme(axis.text.x=element_text(angle=90, hjust=1)) + 
-            labs(title = "Curva zero", subtitle = resposta_dados(), 
+            labs(title = "Curvas", subtitle = opcao_dados(), 
                  caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
-            scale_x_continuous(breaks = seq(0.5, 10.5, 0.5))
-            }
-    )
+            scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
+            scale_y_continuous(breaks = round(seq(min(limites()), max(limites()), by = 0.5),1)) + 
+            scale_color_discrete(name = "Datas")
+            })
     
     output$table <- renderTable({
         # arrange(pivot_wider(dados_graf(), names_from = data, values_from = !!sym(resposta_dados())), anos)
         tabela()
-    }
-    )
+        })
     
     output$download <- downloadHandler(
-        filename = function(){"dados.csv"}, 
+        filename = function(){"dados.xlsx"}, 
         content = function(fname){
-            write.csv2(tabela(), fname, row.names = F)
-        }
-    )
-    
+            export(tabela(), fname, row.names = F)
+        })
 }
 
 
 
 # Código da "user interface"
 ui <- fluidPage(
-    h1("Curva Zero"),
+    h1("Estrutura a termo da taxa de juros"),
     selectInput(inputId = "datas",
-                label = "escolha uma data",
+                label = "Escolha alguma(s) data(s):",
                 choices = datas_tratadas,
-                multiple = T),
+                multiple = T,
+                selected = head(datas_tratadas,1)),
     selectInput(inputId = "dados",
-                label = "escolha um tipo de dado",
-                choices = c("nominal" = "nominal",
-                            "real" = "real",
-                            "implicita" = "implicita")),
-    h2("Grafico"),
+                label = "Escolha um tipo de dado:",
+                choices = c("Nominal" = "nominal",
+                            "Real" = "real",
+                            "Inflação implícita" = "implicita")),
+    h2("Gráfico"),
     plotOutput("plot"),
     h2("Tabela com dados"),
     tableOutput("table"),
-    downloadButton('download',"Download da tabela"),
+    downloadButton('download',"Download da tabela")
 )
 
 
