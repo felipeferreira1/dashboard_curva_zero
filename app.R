@@ -11,7 +11,7 @@ library(shiny)
 library(tidyverse)
 library(rio)
 library(openxlsx)
-library(ggrepel)
+library(plotly)
 library(scales)
 library(shinydashboard)
 
@@ -71,7 +71,7 @@ dados_lista <- list(implicita = dados_implicita, nominal = dados_nominal, real =
 
 
 
-# CÃ³digo do servidor
+# Servidor
 server <- function(input, output, session){
 
     resposta_data1 <- reactive({
@@ -96,7 +96,7 @@ server <- function(input, output, session){
         if (resposta_dados1() == "nominal")
             return("Nominal")
         if (resposta_dados1() == "implicita")
-            return("Inflação implícita")
+            return("InflaÃ§Ã£o implÃ­cita")
         })
     
     limites1 <- reactive({
@@ -104,16 +104,17 @@ server <- function(input, output, session){
     })
     
     
-    output$plot1 <- renderPlot({
-        dados_graf1() %>% 
+    output$plot1 <- renderPlotly({
+        graf1 <- dados_graf1() %>% 
             ggplot(aes(x = anos, y = !!sym(resposta_dados1()), color = data, label = sprintf("%0.2f", round(!!sym(resposta_dados1()),2)))) + 
-            geom_line() + geom_label_repel() + 
+            geom_line() + geom_point() +
             theme(axis.text.x=element_text(angle=90, hjust=1)) + 
             labs(title = "Curvas", subtitle = opcao_dados1(), 
                  caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
             scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
             scale_y_continuous(breaks = round(seq(min(limites1()), max(limites1()), by = 0.5),1)) + 
             scale_color_discrete(name = "Datas")
+        graf1 <- graf1 %>% ggplotly() %>% style(hoverinfo = "y")
             })
     
     output$table1 <- renderTable({
@@ -155,23 +156,24 @@ server <- function(input, output, session){
         if (resposta_dados2() == "nominal")
             return("Nominal")
         if (resposta_dados2() == "implicita")
-            return("Inflação implícita")
+            return("InflaÃ§Ã£o implícita")
     })
     
     limites2 <- reactive({
         tabela2() %>% replace(is.na(.), 0)
     })
     
-    output$plot2 <- renderPlot({
-        tabela2() %>% 
+    output$plot2 <- renderPlotly({
+        graf2 <- tabela2() %>% 
             ggplot(aes(x = anos, y = diferenca, label = sprintf("%0.2f", diferenca, 2))) + 
-            geom_line() + geom_label_repel() + 
+            geom_line() + geom_point() +
             theme(axis.text.x=element_text(angle=90, hjust=1)) + 
             labs(title = "Diferença", subtitle = opcao_dados2(), 
                  caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
             scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
             scale_y_continuous(breaks = round(seq(min(limites2()), max(limites2()), by = 0.5),1)) + 
             scale_color_discrete(name = "Datas")
+        graf2 <- graf2 %>% ggplotly() %>% style(hoverinfo = "y")
     })
     
     output$table2 <- renderTable({
@@ -188,7 +190,7 @@ server <- function(input, output, session){
 
 
 
-# CÃ³digo da "user interface"
+# "User interface"
 
 ui <- dashboardPage(
     dashboardHeader(),
@@ -215,10 +217,10 @@ ui <- dashboardPage(
                                             label = "Escolha um tipo de dado:",
                                             choices = c("Nominal" = "nominal",
                                                         "Real" = "real",
-                                                        "InflaÃ§Ã£o implícita" = "implicita")),
+                                                        "Inflação implícita" = "implicita")),
                                 downloadButton('download1',"Download dos dados")),
                             mainPanel(tabsetPanel(type = "tabs",
-                                                  tabPanel("Gráfico", plotOutput("plot1")),
+                                                  tabPanel("Gráfico", plotlyOutput("plot1")),
                                                   tabPanel("Tabela", tableOutput("table1"))))))
             ),
             tabItem(tabName = "second_app",
@@ -241,53 +243,14 @@ ui <- dashboardPage(
                                             label = "Escolha um tipo de dado:",
                                             choices = c("Nominal" = "nominal",
                                                         "Real" = "real",
-                                                        "InflaÃ§Ão implícita" = "implicita")),
+                                                        "Inflação implícita" = "implicita")),
                                 downloadButton('download2',"Download dos dados")),
                             mainPanel(tabsetPanel(type = "tabs",
-                                                  tabPanel("Gráfico", plotOutput("plot2")),
+                                                  tabPanel("Gráfico", plotlyOutput("plot2")),
                                                   tabPanel("Tabela", tableOutput("table2")))))))
         )
     )
 )
-    
-#     fluidPage(
-#     titlePanel("Estrutura a termo da taxa de juros"),
-#     sidebarLayout(
-#         sidebarPanel(
-#             selectInput(inputId = "datas",
-#                         label = "Escolha alguma(s) data(s):",
-#                         choices = datas_tratadas,
-#                         multiple = T,
-#                         selected = head(datas_tratadas,1)),
-#             br(),
-#             selectInput(inputId = "dados",
-#                         label = "Escolha um tipo de dado:",
-#                         choices = c("Nominal" = "nominal",
-#                                     "Real" = "real",
-#                                     "InflaÃ§Ã£o implÃ­cita" = "implicita")),
-#             downloadButton('download',"Download dos dados")),
-# mainPanel(tabsetPanel(type = "tabs",
-#               tabPanel("Gráfico", plotOutput("plot")),
-#               tabPanel("tabela1", tableOutput("table"))))))
-
-# ui <- fluidPage(
-#     h1("Estrutura a termo da taxa de juros"),
-#     selectInput(inputId = "datas",
-#                 label = "Escolha alguma(s) data(s):",
-#                 choices = datas_tratadas,
-#                 multiple = T,
-#                 selected = head(datas_tratadas,1)),
-#     selectInput(inputId = "dados",
-#                 label = "Escolha um tipo de dado:",
-#                 choices = c("Nominal" = "nominal",
-#                             "Real" = "real",
-#                             "InflaÃ§Ã£o implÃ­cita" = "implicita")),
-#     h2("GrÃ¡fico"),
-#     plotOutput("plot"),
-#     h2("tabela1 com dados"),
-#     tableOutput("table"),
-#     downloadButton('download',"Download da tabela1")
-# )
 
 
 

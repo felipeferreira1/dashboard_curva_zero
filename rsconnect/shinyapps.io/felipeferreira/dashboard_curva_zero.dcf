@@ -5,9 +5,9 @@ account: felipeferreira
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4292656
-bundleId: 4773923
+bundleId: 4781100
 url: https://felipeferreira.shinyapps.io/dashboard_curva_zero/
-when: 1625073589.76014
-lastSyncTime: 1625073589.76014
+when: 1625238823.9631
+lastSyncTime: 1625238823.9631
 asMultiple: FALSE
 asStatic: FALSE

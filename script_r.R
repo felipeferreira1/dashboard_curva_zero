@@ -6,9 +6,10 @@
 library(tidyverse)
 library(rio)
 library(openxlsx)
-#library(shiny)
-library(ggrepel)
+# library(shiny)
+# library(ggrepel)
 library(scales)
+library(plotly)
 
 ##Definindo caminho
 setwd("D:/Documentos/GitHub/dashboard_curva_zero")
@@ -58,13 +59,15 @@ usuario_data <- function(){
   dado_graf <- get(resposta_data) %>% select(anos, all_of(resposta_dados)) %>% rename(!!resposta_data := resposta_dados)
 
   graf <- ggplot(dado_graf, aes(x = anos, y = get(!!resposta_data), label = sprintf("%0.2f", round(dado_graf[,2],2)))) + 
-    geom_line() + geom_label_repel() + 
+    geom_line() + geom_point() +
     scale_x_continuous(breaks = round(seq(min(dado_graf$anos), max(dado_graf$anos), by = 0.5),1)) + 
     scale_y_continuous(breaks = round(seq(min(dado_graf[,2]), max(dado_graf[,2]), by = 0.5),1)) + 
     theme(axis.text.x=element_text(angle=90, hjust=1)) + 
     labs(title = paste("Curva zero", resposta_data, sep = " "), subtitle = resposta_dados,
          caption = "Fonte: Ambima") + ylab("%") + xlab("Anos")
   
+  # show(graf)
+  graf <- graf %>% ggplotly() %>% style(hoverinfo = "y")
   show(graf)
   
   for (i in 1:length(datas_tratadas)){
@@ -80,13 +83,15 @@ usuario_data <- function(){
     dado_graf_mult <- dado_graf %>% na.omit() %>% pivot_longer(-1)
     
     graf <- ggplot(dado_graf_mult, aes(x = anos, y = value, colour = name, label = sprintf("%0.2f", round(value,2)))) +
-      geom_line() + geom_label_repel() + 
+      geom_line() + geom_point() +
       scale_x_continuous(breaks = round(seq(min(dado_graf_mult$anos), max(dado_graf_mult$anos), by = 0.5),1)) + 
       scale_y_continuous(breaks = round(seq(min(dado_graf_mult$value), max(dado_graf_mult$value), by = 0.5),1)) + 
       theme(axis.text.x=element_text(angle=90, hjust=1), legend.position = "bottom") + 
       scale_colour_discrete(name = "Datas") + 
       labs(title = "Curva zero", subtitle = resposta_dados,
            caption = "Fonte: Ambima") + ylab("%") + xlab("Anos")
+    # show(graf)
+    graf <- graf %>% ggplotly() %>% style(hoverinfo = "y")
     show(graf)
   }
 }
