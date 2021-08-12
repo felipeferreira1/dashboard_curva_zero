@@ -12,7 +12,6 @@ library(tidyverse)
 library(rio)
 library(openxlsx)
 library(plotly)
-library(scales)
 library(shinydashboard)
 
 
@@ -123,9 +122,9 @@ server <- function(input, output, session){
         })
     
     output$download1 <- downloadHandler(
-        filename = function(){"dados.xlsx"}, 
+        filename = function(){"dados.csv"}, 
         content = function(fname){
-            export(tabela1(), fname, row.names = F)
+            write.csv2(tabela1(),fname, row.names = F)
         })
     
     
@@ -182,9 +181,9 @@ server <- function(input, output, session){
     })
     
     output$download2 <- downloadHandler(
-        filename = function(){"dados.xlsx"}, 
+        filename = function(){"dados.csv"}, 
         content = function(fname){
-            export(tabela2(), fname, row.names = F)
+            write.csv2(tabela2(),fname, row.names = F)
         })
 }
 
