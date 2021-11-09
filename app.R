@@ -13,6 +13,7 @@ library(rio)
 library(openxlsx)
 library(plotly)
 library(shinydashboard)
+library(stringi)
 
 
 
@@ -91,11 +92,11 @@ server <- function(input, output, session){
     
     opcao_dados1 <- reactive({
         if (resposta_dados1() == "real")
-            return("Real")
+            return("Juros reais")
         if (resposta_dados1() == "nominal")
-            return("Nominal")
+            return("Juros nominais")
         if (resposta_dados1() == "implicita")
-            return("InflaÃ§Ã£o implÃ­cita")
+            return("Inflação implícita")
         })
     
     limites1 <- reactive({
@@ -107,13 +108,23 @@ server <- function(input, output, session){
         graf1 <- dados_graf1() %>% 
             ggplot(aes(x = anos, y = !!sym(resposta_dados1()), color = data, label = sprintf("%0.2f", round(!!sym(resposta_dados1()),2)))) + 
             geom_line() + geom_point() +
-            theme(axis.text.x=element_text(angle=90, hjust=1)) + 
+            theme(axis.text.x=element_text(angle=90, hjust=1)) +
             labs(title = "Curvas", subtitle = opcao_dados1(), 
                  caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
             scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
-            scale_y_continuous(breaks = round(seq(min(limites1()), max(limites1()), by = 0.5),1)) + 
+            scale_y_continuous(breaks = round(seq(min(limites1()), max(limites1()), by = 0.1),1)) + 
             scale_color_discrete(name = "Datas")
-        graf1 <- graf1 %>% ggplotly() %>% style(hoverinfo = "y")
+        graf1 <- graf1 %>% ggplotly() %>%
+            layout(title = list(text = paste0('Estrutura a termo da taxa de juros',
+                                              '<br>',
+                                              '<sup>',
+                                              stri_enc_toutf8(opcao_dados1(), is_unknown_8bit = FALSE, validate = FALSE),
+                                              '</sup>'))) %>%
+            layout(annotations = list(x = 1.0, y = -0.1, text = "Fonte: Anbima", 
+                            showarrow = F, xref='paper', yref='paper', 
+                            xanchor='left', yanchor='auto', xshift=0, yshift=0,
+                            font=list(size=15, color="black"))) %>% 
+            style(hoverinfo = "y")
             })
     
     output$table1 <- renderTable({
@@ -151,11 +162,11 @@ server <- function(input, output, session){
     
     opcao_dados2 <- reactive({
         if (resposta_dados2() == "real")
-            return("Real")
+            return("Juros reais")
         if (resposta_dados2() == "nominal")
-            return("Nominal")
+            return("Juros nominais")
         if (resposta_dados2() == "implicita")
-            return("InflaÃ§Ã£o implícita")
+            return("Inflação implícita")
     })
     
     limites2 <- reactive({
@@ -167,12 +178,22 @@ server <- function(input, output, session){
             ggplot(aes(x = anos, y = diferenca, label = sprintf("%0.2f", diferenca, 2))) + 
             geom_line() + geom_point() +
             theme(axis.text.x=element_text(angle=90, hjust=1)) + 
-            labs(title = "Diferença", subtitle = opcao_dados2(), 
+            labs(title = "Diferenças", subtitle = opcao_dados1(), 
                  caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
             scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
-            scale_y_continuous(breaks = round(seq(min(limites2()), max(limites2()), by = 0.5),1)) + 
+            scale_y_continuous(breaks = round(seq(min(limites2()), max(limites2()), by = 0.1),1)) + 
             scale_color_discrete(name = "Datas")
-        graf2 <- graf2 %>% ggplotly() %>% style(hoverinfo = "y")
+        graf2 <- graf2 %>% ggplotly() %>% 
+            layout(title = list(text = paste0('Diferença entre vértices de datas diferentes',
+                                              '<br>',
+                                              '<sup>',
+                                              stri_enc_toutf8(opcao_dados2(), is_unknown_8bit = FALSE, validate = FALSE),
+                                              '</sup>'))) %>%
+            layout(annotations = list(x = 1.0, y = -0.1, text = "Fonte: Anbima", 
+                                      showarrow = F, xref='paper', yref='paper', 
+                                      xanchor='right', yanchor='top', xshift=0, yshift=0,
+                                      font=list(size=15, color="black"))) %>% 
+            style(hoverinfo = "y")
     })
     
     output$table2 <- renderTable({
