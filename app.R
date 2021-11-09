@@ -122,8 +122,8 @@ server <- function(input, output, session){
                                               '</sup>'))) %>%
             layout(annotations = list(x = 1.0, y = -0.1, text = "Fonte: Anbima", 
                             showarrow = F, xref='paper', yref='paper', 
-                            xanchor='left', yanchor='auto', xshift=0, yshift=0,
-                            font=list(size=15, color="black"))) %>% 
+                            xanchor='left', yanchor='top', xshift=0, yshift=0,
+                            font=list(size=10, color="black"))) %>% 
             style(hoverinfo = "y")
             })
     
@@ -189,10 +189,10 @@ server <- function(input, output, session){
                                               '<sup>',
                                               stri_enc_toutf8(opcao_dados2(), is_unknown_8bit = FALSE, validate = FALSE),
                                               '</sup>'))) %>%
-            layout(annotations = list(x = 1.0, y = -0.1, text = "Fonte: Anbima", 
+            layout(annotations = list(x = 1.0, y = -0.15, text = "Fonte: Anbima", 
                                       showarrow = F, xref='paper', yref='paper', 
                                       xanchor='right', yanchor='top', xshift=0, yshift=0,
-                                      font=list(size=15, color="black"))) %>% 
+                                      font=list(size=10, color="black"))) %>% 
             style(hoverinfo = "y")
     })
     
@@ -235,8 +235,8 @@ ui <- dashboardPage(
                                 br(),
                                 selectInput(inputId = "dados1",
                                             label = "Escolha um tipo de dado:",
-                                            choices = c("Nominal" = "nominal",
-                                                        "Real" = "real",
+                                            choices = c("Juros nominais" = "nominal",
+                                                        "Juros reais" = "real",
                                                         "Inflação implícita" = "implicita")),
                                 downloadButton('download1',"Download dos dados")),
                             mainPanel(tabsetPanel(type = "tabs",
@@ -261,8 +261,8 @@ ui <- dashboardPage(
                                 br(),
                                 selectInput(inputId = "dados2",
                                             label = "Escolha um tipo de dado:",
-                                            choices = c("Nominal" = "nominal",
-                                                        "Real" = "real",
+                                            choices = c("Juros nominais" = "nominal",
+                                                        "Juros reais" = "real",
                                                         "Inflação implícita" = "implicita")),
                                 downloadButton('download2',"Download dos dados")),
                             mainPanel(tabsetPanel(type = "tabs",
