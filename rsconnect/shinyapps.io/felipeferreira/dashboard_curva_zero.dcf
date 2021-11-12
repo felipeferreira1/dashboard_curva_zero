@@ -5,10 +5,10 @@ account: felipeferreira
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4292656
-bundleId: 5232653
+bundleId: 5242642
 url: https://felipeferreira.shinyapps.io/dashboard_curva_zero/
-when: 1636476737.57624
-lastSyncTime: 1636476737.57624
+when: 1636679804.61707
+lastSyncTime: 1636679804.61707
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: .RData|2021-11-04.xlsx|app 2.0.R|curva_zero_automatico.R|dados_implicita|dados_nominal|dados_real|script_r.R

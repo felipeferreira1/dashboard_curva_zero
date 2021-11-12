@@ -103,6 +103,17 @@ server <- function(input, output, session){
         dados_graf1() %>% select(-anos, -data) %>% replace(is.na(.), 0)
     })
     
+    n_ticks_y <- reactive({
+        if (as.numeric(length(round(seq(min(limites1()), max(limites1()), by = 0.1),1))) <= 20)
+            return(round(seq(min(limites1()), max(limites1()), by = 0.1),1))
+        if (as.numeric(length(round(seq(min(limites1()), max(limites1()), by = 0.1),1))) <= 40 & as.numeric(length(round(seq(min(limites1()), max(limites1()), by = 0.1),1))) > 20)
+            return(round(seq(min(limites1()), max(limites1()), by = 0.2),1))
+        if (as.numeric(length(round(seq(min(limites1()), max(limites1()), by = 0.1),1))) < 60 & as.numeric(length(round(seq(min(limites1()), max(limites1()), by = 0.1),1))) > 40)
+            return(round(seq(min(limites1()), max(limites1()), by = 0.3),1))
+        else
+            return(round(seq(min(limites1()), max(limites1()), by = 0.4),1))
+    })
+    
     
     output$plot1 <- renderPlotly({
         graf1 <- dados_graf1() %>% 
@@ -112,18 +123,18 @@ server <- function(input, output, session){
             labs(title = "Curvas", subtitle = opcao_dados1(), 
                  caption = "Fonte: Anbima") + ylab("%") + xlab("Anos") + 
             scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
-            scale_y_continuous(breaks = round(seq(min(limites1()), max(limites1()), by = 0.1),1)) + 
+            scale_y_continuous(breaks = n_ticks_y()) + 
             scale_color_discrete(name = "Datas")
-        graf1 <- graf1 %>% ggplotly() %>%
+        graf1 <- graf1 %>% ggplotly(height = 700) %>%
             layout(title = list(text = paste0('Estrutura a termo da taxa de juros',
                                               '<br>',
                                               '<sup>',
                                               stri_enc_toutf8(opcao_dados1(), is_unknown_8bit = FALSE, validate = FALSE),
                                               '</sup>'))) %>%
-            layout(annotations = list(x = 1.0, y = -0.1, text = "Fonte: Anbima", 
+            layout(annotations = list(x = 1.05, y = -0.05, text = "Fonte: Anbima", 
                             showarrow = F, xref='paper', yref='paper', 
                             xanchor='left', yanchor='top', xshift=0, yshift=0,
-                            font=list(size=10, color="black"))) %>% 
+                            font=list(size=12, color="black"))) %>% 
             style(hoverinfo = "y")
             })
     
@@ -183,16 +194,16 @@ server <- function(input, output, session){
             scale_x_continuous(breaks = seq(0.5, 10.5, 0.5)) + 
             scale_y_continuous(breaks = round(seq(min(limites2()), max(limites2()), by = 0.1),1)) + 
             scale_color_discrete(name = "Datas")
-        graf2 <- graf2 %>% ggplotly() %>% 
+        graf2 <- graf2 %>% ggplotly(height = 700) %>% 
             layout(title = list(text = paste0('Diferença entre vértices de datas diferentes',
                                               '<br>',
                                               '<sup>',
                                               stri_enc_toutf8(opcao_dados2(), is_unknown_8bit = FALSE, validate = FALSE),
                                               '</sup>'))) %>%
-            layout(annotations = list(x = 1.0, y = -0.15, text = "Fonte: Anbima", 
+            layout(annotations = list(x = 1, y = -0.06, text = "Fonte: Anbima", 
                                       showarrow = F, xref='paper', yref='paper', 
                                       xanchor='right', yanchor='top', xshift=0, yshift=0,
-                                      font=list(size=10, color="black"))) %>% 
+                                      font=list(size=12, color="black"))) %>% 
             style(hoverinfo = "y")
     })
     
@@ -232,6 +243,7 @@ ui <- dashboardPage(
                                             choices = datas_tratadas,
                                             multiple = T,
                                             selected = head(datas_tratadas,1)),
+                                width = 2,
                                 br(),
                                 selectInput(inputId = "dados1",
                                             label = "Escolha um tipo de dado:",
@@ -241,7 +253,8 @@ ui <- dashboardPage(
                                 downloadButton('download1',"Download dos dados")),
                             mainPanel(tabsetPanel(type = "tabs",
                                                   tabPanel("Gráfico", plotlyOutput("plot1")),
-                                                  tabPanel("Tabela", tableOutput("table1"))))))
+                                                  tabPanel("Tabela", tableOutput("table1"))),
+                                      width = 10)))
             ),
             tabItem(tabName = "second_app",
                     fluidPage(
@@ -253,6 +266,7 @@ ui <- dashboardPage(
                                             choices = datas_tratadas,
                                             multiple = F,
                                             selected = head(datas_tratadas,1)),
+                                width = 2,
                                 br(),
                                 selectInput(inputId = "datas3",
                                             label = "Escolha outra data:",
@@ -267,7 +281,8 @@ ui <- dashboardPage(
                                 downloadButton('download2',"Download dos dados")),
                             mainPanel(tabsetPanel(type = "tabs",
                                                   tabPanel("Gráfico", plotlyOutput("plot2")),
-                                                  tabPanel("Tabela", tableOutput("table2")))))))
+                                                  tabPanel("Tabela", tableOutput("table2"))),
+                                      width = 10))))
         )
     )
 )
