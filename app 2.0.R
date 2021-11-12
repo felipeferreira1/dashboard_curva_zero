@@ -13,7 +13,6 @@ library(rio)
 library(openxlsx)
 library(shinydashboard)
 library(GetTDData)
-library(data.table)
 
 
 
@@ -35,20 +34,17 @@ df.incorporar$data <- as.character(df.yield[1,"current.date"])
 
 
 # Coletando o resto dos dados
-dados_real <- data.table(readRDS("dados_real"))
-dados_real <- df.incorporar %>% select(data, anos, real) %>% rbind(dados_real)
-# dados_real <- rbindlist(list(df.bind, dados_real))[!duplicated(data)]
-# saveRDS(dados_real, "dados_real")
+dados_real <- readRDS("dados_real")
+dados_real <- df.incorporar %>% select(data, anos, real) %>% rbind(dados_real) %>% distinct()
+saveRDS(dados_real, "dados_real")
 
 dados_nominal <- readRDS("dados_nominal")
-dados_nominal <- df.incorporar %>% select(data, anos, nominal) %>% rbind(dados_nominal)
-# dados_nominal <- rbindlist(list(df.bind, dados_nominal))[!duplicated(data)]
-# saveRDS(dados_nominal, "dados_nominal")
+dados_nominal <- df.incorporar %>% select(data, anos, nominal) %>% rbind(dados_nominal) %>% distinct()
+saveRDS(dados_nominal, "dados_nominal")
 
 dados_implicita <- readRDS("dados_implicita")
-dados_implicita <- df.incorporar %>% select(data, anos, implicita) %>% rbind(dados_implicita)
-# dados_implicita <- rbindlist(list(df.bind, dados_implicita))[!duplicated(data)]
-# saveRDS(dados_implicita, "dados_implicita")
+dados_implicita <- df.incorporar %>% select(data, anos, implicita) %>% rbind(dados_implicita) %>% distinct()
+saveRDS(dados_implicita, "dados_implicita")
 
 
 
