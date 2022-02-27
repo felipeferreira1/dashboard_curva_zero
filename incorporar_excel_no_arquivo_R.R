@@ -1,4 +1,15 @@
+#################################################################################################################
+# Append dos arquivos excel da ETTJ para o formato R
+# Felipe Simplicio Ferreira
+# Data: 27-02-2022
+#################################################################################################################
 
+
+
+# Pacotes
+library(tidyverse)
+library(rio)
+library(openxlsx)
 
 
 dados <- import("curva.xlsx", col_names = F)
@@ -16,12 +27,15 @@ dados["data"] <- data_recortada
 # Juntando com o resto dos dados
 dados_real <- readRDS("dados_real")
 dados_real <- dados %>% select(data, anos, real) %>% rbind(dados_real) %>% distinct()
-# saveRDS(dados_real, "dados_real")
+dados_real$data <- as.character(dados_real$data)
+saveRDS(dados_real, "dados_real")
 
 dados_nominal <- readRDS("dados_nominal")
 dados_nominal <- dados %>% select(data, anos, nominal) %>% rbind(dados_nominal) %>% distinct()
-# saveRDS(dados_nominal, "dados_nominal")
+dados_nominal$data <- as.character(dados_nominal$data)
+saveRDS(dados_nominal, "dados_nominal")
 
 dados_implicita <- readRDS("dados_implicita")
 dados_implicita <- dados %>% select(data, anos, implicita) %>% rbind(dados_implicita) %>% distinct()
-# saveRDS(dados_implicita, "dados_implicita")
+dados_implicita$data <- as.character(dados_implicita$data)
+saveRDS(dados_implicita, "dados_implicita")

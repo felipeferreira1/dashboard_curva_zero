@@ -13,6 +13,7 @@ library(rio)
 library(openxlsx)
 library(shinydashboard)
 library(GetTDData)
+library(plotly)
 
 
 
